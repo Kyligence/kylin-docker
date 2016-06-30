@@ -1,0 +1,6 @@
+[HDP-UTILS-1.1.0.20]
+name=HDP-UTILS
+baseurl=http://public-repo-1.hortonworks.com/HDP-UTILS-1.1.0.20/repos/centos6
+path=/
+enabled=1
+gpgcheck=0
