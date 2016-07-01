@@ -24,7 +24,7 @@ RUN cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
 
 
 # hadoop, hive, hbase
-RUN yum install -y hbase tez hadoop snappy snappy-devel hadoop-libhdfs ambari-log4j hive hive-hcatalog hive-webhcat webhcat-tar-hive webhcat-tar-pig mysql-connector-java mysql-server
+RUN yum install -y hbase tez hadoop snappy snappy-devel hadoop-libhdfs ambari-log4j hive hive-hcatalog hive-webhcat webhcat-tar-hive mysql-connector-java 
 RUN yum -y remove java*
 
 # java
@@ -60,7 +60,7 @@ RUN echo "Port 2122" >> /etc/ssh/sshd_config
 
 CMD ["/etc/bootstrap.sh", "-d"]
 
-ENV JAVA_LIBRARY_PATH /usr/hdp/current/hadoop/lib/native:$JAVA_LIBRARY_PATH
+ENV JAVA_LIBRARY_PATH /usr/local/hadoop/lib/native:/usr/hdp/2.2.9.0-3393/hadoop/lib/native:$JAVA_LIBRARY_PATH
 
 # Kylin and Other ports
 EXPOSE 7070 7443 49707 2122

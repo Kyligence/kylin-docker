@@ -1,5 +1,9 @@
 <configuration>
     <property>
+      <name>hdp.version</name>
+      <value>2.2.9.0-3393</value>
+    </property>
+    <property>
         <name>yarn.nodemanager.aux-services</name>
         <value>mapreduce_shuffle</value>
     </property>
