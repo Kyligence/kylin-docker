@@ -27,7 +27,7 @@ Below is a sample of building and running a docker image for Hortonworks HDP 2.2
 
 2. Prepare kylin.properties 
 
-  The kylin.properties file is the main configuration file for Kylin; you need prepare such a file and put it to the "~/hadoop-conf/" folder, together with other conf files; suggest to double check the parameters in it; e.g, the "kylin.metadata.url" points to the right metadata table, "kylin.hdfs.working.dir" is an existing HDFS folder and you have permission to write, "kylin.hbase.default.compression.codec" is set to blank to disable snappy, etc.
+  The kylin.properties file is the main configuration file for Kylin; you need prepare such a file and put it to the "~/hadoop-conf/" folder, together with other conf files; suggest to double check the parameters in it; e.g, the "kylin.metadata.url" points to the right metadata table, "kylin.hdfs.working.dir" is an existing HDFS folder and you have permission to write, etc.
 
 3. Clone this repository, checkout the correct branch;
   ```
