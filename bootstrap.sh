@@ -1,5 +1,5 @@
 #!/bin/bash
-service sshd start
+#systemctl start sshd
 
 $KYLIN_HOME/bin/kylin.sh start
 

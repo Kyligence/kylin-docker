@@ -1,6 +1,6 @@
-# Creates a kylin 1.5.2 + HDP 2.2 image
+# Creates a kylin 1.5.2 + HDP 2.4 + Centos7 image
 
-FROM sequenceiq/pam:centos-6.5
+FROM centos:7
 MAINTAINER Kyligence Inc
 
 USER root
@@ -8,7 +8,7 @@ USER root
 ADD HDP.repo /etc/yum.repos.d/HDP.repo
 ADD HDP-UTILS.repo /etc/yum.repos.d/HDP-UTILS.repo
 
-RUN rpm -iUvh http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
+RUN rpm -iUvh http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-7.noarch.rpm
 # install dev tools
 RUN yum clean all; \
     rpm --rebuilddb; \
@@ -37,7 +37,7 @@ ENV PATH $PATH:$JAVA_HOME/bin
 RUN rm /usr/bin/java && ln -s $JAVA_HOME/bin/java /usr/bin/java
 
 # kylin 1.5.2
-RUN curl -s https://www-us.apache.org/dist/kylin/apache-kylin-1.5.2.1/apache-kylin-1.5.2.1-bin.tar.gz | tar -xz -C /usr/local/
+RUN curl -s https://www-us.apache.org/dist/kylin/apache-kylin-1.5.2.1/apache-kylin-1.5.2.1-HBase1.x-bin.tar.gz | tar -xz -C /usr/local/
 RUN cd /usr/local && ln -s ./apache-kylin-1.5.2.1-bin kylin
 ENV KYLIN_HOME /usr/local/kylin
 
@@ -60,7 +60,7 @@ RUN echo "Port 2122" >> /etc/ssh/sshd_config
 
 CMD ["/etc/bootstrap.sh", "-d"]
 
-ENV JAVA_LIBRARY_PATH /usr/local/hadoop/lib/native:/usr/hdp/2.2.9.0-3393/hadoop/lib/native:$JAVA_LIBRARY_PATH
+ENV JAVA_LIBRARY_PATH /usr/local/hadoop/lib/native:/usr/hdp/current/hadoop/lib/native:$JAVA_LIBRARY_PATH
 
 # Kylin and Other ports
 EXPOSE 7070 7443 49707 2122
