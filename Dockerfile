@@ -41,10 +41,6 @@ RUN curl -s https://www-us.apache.org/dist/kylin/apache-kylin-1.5.2.1/apache-kyl
 RUN cd /usr/local && ln -s ./apache-kylin-1.5.2.1-bin kylin
 ENV KYLIN_HOME /usr/local/kylin
 
-# fixing the libhadoop.so like a boss
-RUN mkdir -p /usr/local/hadoop/lib/native/
-RUN curl -Ls http://dl.bintray.com/sequenceiq/sequenceiq-bin/hadoop-native-64-2.6.0.tar | tar -x -C /usr/local/hadoop/lib/native/
-
 ADD ssh_config /root/.ssh/config
 RUN chmod 600 /root/.ssh/config && chown root:root /root/.ssh/config
 
@@ -60,7 +56,7 @@ RUN echo "Port 2122" >> /etc/ssh/sshd_config
 
 CMD ["/etc/bootstrap.sh", "-d"]
 
-ENV JAVA_LIBRARY_PATH /usr/local/hadoop/lib/native:/usr/hdp/current/hadoop/lib/native:$JAVA_LIBRARY_PATH
+ENV JAVA_LIBRARY_PATH /usr/hdp/2.4.0.0-169/hadoop/lib/native:$JAVA_LIBRARY_PATH
 
 # Kylin and Other ports
 EXPOSE 7070 7443 49707 2122
