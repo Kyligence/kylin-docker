@@ -37,7 +37,10 @@ ENV PATH $PATH:$JAVA_HOME/bin
 RUN rm /usr/bin/java && ln -s $JAVA_HOME/bin/java /usr/bin/java
 
 # kylin 1.5.2
-RUN curl -s https://www-us.apache.org/dist/kylin/apache-kylin-1.5.2.1/apache-kylin-1.5.2.1-bin.tar.gz | tar -xz -C /usr/local/
+RUN sudo yum install wget -y
+RUN wget https://archive.apache.org/dist/kylin/apache-kylin-1.5.2.1/apache-kylin-1.5.2.1-bin.tar.gz 
+RUN tar -xf apache-kylin-1.5.2.1-bin.tar.gz
+RUN mv apache-kylin-1.5.2.1-bin /usr/local
 RUN cd /usr/local && ln -s ./apache-kylin-1.5.2.1-bin kylin
 ENV KYLIN_HOME /usr/local/kylin
 
