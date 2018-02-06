@@ -55,17 +55,13 @@ ENV HBASE_HOME=/usr/local/hbase
 ARG KYLIN_VERSION=2.2.0
 # COPY apache-kylin-${KYLIN_VERSION}-bin-hbase1x.tar.gz .
 RUN set -x \
-    && wget -q http://${MIRROR}/apache/kylin/${KYLIN_VERSION}/apache-kylin-${KYLIN_VERSION}-bin-hbase1x.tar.gz \
+    && wget -q http://${MIRROR}/apache/kylin/apache-kylin-${KYLIN_VERSION}/apache-kylin-${KYLIN_VERSION}-bin-hbase1x.tar.gz \
     && tar -xzvf apache-kylin-${KYLIN_VERSION}-bin-hbase1x.tar.gz -C /usr/local/ \
     && mv /usr/local/apache-kylin-${KYLIN_VERSION}-bin /usr/local/kylin
 ENV KYLIN_HOME=/usr/local/kylin
 
 # Setting the PATH environment variable
 ENV PATH=$PATH:$JAVA_HOME/bin:$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$SPARK_HOME/bin:$HIVE_HOME/bin:$HBASE_HOME/bin:$KYLIN_HOME/bin
-
-# Setting up log directories
-RUN set -x \
-    && ln -s /data/logs/kylin $KYLIN_HOME/logs
 
 COPY client-conf/core-site.xml $HADOOP_HOME/etc/hadoop/core-site.xml
 COPY client-conf/hdfs-site.xml $HADOOP_HOME/etc/hadoop/hdfs-site.xml
@@ -82,6 +78,6 @@ RUN rm -rf /tmp/*
 WORKDIR /root
 EXPOSE 7070
 
-VOLUME /data
+VOLUME /usr/local/kylin/logs
 
 ENTRYPOINT ["sh", "-c", "/usr/local/kylin/bin/kylin.sh start; bash"]
