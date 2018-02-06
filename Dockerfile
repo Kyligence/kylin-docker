@@ -1,84 +1,83 @@
-# Creates a kylin 1.5.2 + HDP 2.2 image
+FROM java:8-jre
 
-FROM sequenceiq/pam:centos-6.5
 MAINTAINER Kyligence Inc
 
-USER root
+WORKDIR /tmp
 
-ADD HDP.repo /etc/yum.repos.d/HDP.repo
-ADD HDP-UTILS.repo /etc/yum.repos.d/HDP-UTILS.repo
+RUN set -x \
+    && apt-get update && apt-get install -y wget vim telnet ntp \
+    && update-rc.d ntp defaults
 
-RUN rpm -iUvh http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
-# install dev tools
-RUN yum clean all; \
-    rpm --rebuilddb; \
-    yum install -y curl which tar sudo openssh-server openssh-clients rsync
-# update libselinux. see https://github.com/sequenceiq/hadoop-docker/issues/14
-RUN yum update -y libselinux
+ARG MIRROR=mirror.bit.edu.cn
 
-# passwordless ssh
-RUN ssh-keygen -q -N "" -t dsa -f /etc/ssh/ssh_host_dsa_key
-RUN ssh-keygen -q -N "" -t rsa -f /etc/ssh/ssh_host_rsa_key
-RUN ssh-keygen -q -N "" -t rsa -f /root/.ssh/id_rsa
-RUN cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
+# Installing Hadoop
+ARG HADOOP_VERSION=2.7.4
+# COPY hadoop-${HADOOP_VERSION}.tar.gz .
+RUN set -x \
+    && wget -q http://${MIRROR}/apache/hadoop/common/hadoop-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz \
+    && tar -xzvf hadoop-${HADOOP_VERSION}.tar.gz -C /usr/local/ \
+    && mv /usr/local/hadoop-${HADOOP_VERSION} /usr/local/hadoop
+ENV HADOOP_HOME=/usr/local/hadoop
+ENV HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
+ENV YARN_CONF_DIR=$HADOOP_HOME/etc/hadoop
 
+# Installing Spark
+ARG SPARK_VERSION=2.2.1
+# COPY spark-${SPARK_VERSION}-bin-without-hadoop.tgz .
+RUN set -x \
+    && wget -q http://${MIRROR}/apache/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-without-hadoop.tgz \
+    && tar -xzvf spark-${SPARK_VERSION}-bin-without-hadoop.tgz -C /usr/local/ \
+    && mv /usr/local/spark-${SPARK_VERSION}-bin-without-hadoop /usr/local/spark
+ENV SPARK_HOME=/usr/local/spark
+ENV LD_LIBRARY_PATH=$HADOOP_HOME/lib/native/:$LD_LIBRARY_PATH
 
-# hadoop, hive, hbase
-RUN yum install -y hbase tez hadoop snappy snappy-devel hadoop-libhdfs ambari-log4j hive hive-hcatalog hive-webhcat webhcat-tar-hive mysql-connector-java 
-RUN yum -y remove java*
+# Installing Hive
+ARG HIVE_VERSION=1.2.2
+# COPY apache-hive-${HIVE_VERSION}-bin.tar.gz .
+RUN set -x \
+    && wget -q http://${MIRROR}/apache/hive/hive-${HIVE_VERSION}/apache-hive-${HIVE_VERSION}-bin.tar.gz \
+    && tar -xzvf apache-hive-${HIVE_VERSION}-bin.tar.gz -C /usr/local/ \
+    && mv /usr/local/apache-hive-${HIVE_VERSION}-bin /usr/local/hive
+ENV HIVE_HOME=/usr/local/hive
+ENV HCAT_HOME=$HIVE_HOME/hcatalog
+ENV HIVE_CONF=$HIVE_HOME/conf
 
-# java
-RUN curl -LO 'http://download.oracle.com/otn-pub/java/jdk/7u71-b14/jdk-7u71-linux-x64.rpm' -H 'Cookie: oraclelicense=accept-securebackup-cookie'
-RUN rpm -i jdk-7u71-linux-x64.rpm
-RUN rm jdk-7u71-linux-x64.rpm
+# Installing HBase
+ARG HBASE_VERSION=1.3.1
+# COPY hbase-${HBASE_VERSION}-bin.tar.gz .
+RUN set -x \
+    && wget -q http://${MIRROR}/apache/hbase/${HBASE_VERSION}/hbase-${HBASE_VERSION}-bin.tar.gz \
+    && tar -xzvf hbase-${HBASE_VERSION}-bin.tar.gz -C /usr/local/ \
+    && mv /usr/local/hbase-${HBASE_VERSION} /usr/local/hbase
+ENV HBASE_HOME=/usr/local/hbase
 
-ENV JAVA_HOME /usr/java/default
-ENV PATH $PATH:$JAVA_HOME/bin
-RUN rm /usr/bin/java && ln -s $JAVA_HOME/bin/java /usr/bin/java
+# Installing Kylin
+ARG KYLIN_VERSION=2.2.0
+# COPY apache-kylin-${KYLIN_VERSION}-bin-hbase1x.tar.gz .
+RUN set -x \
+    && wget -q http://${MIRROR}/apache/kylin/apache-kylin-${KYLIN_VERSION}/apache-kylin-${KYLIN_VERSION}-bin-hbase1x.tar.gz \
+    && tar -xzvf apache-kylin-${KYLIN_VERSION}-bin-hbase1x.tar.gz -C /usr/local/ \
+    && mv /usr/local/apache-kylin-${KYLIN_VERSION}-bin /usr/local/kylin
+ENV KYLIN_HOME=/usr/local/kylin
 
-# kylin 1.5.2
-RUN sudo yum install wget -y
-RUN wget https://archive.apache.org/dist/kylin/apache-kylin-1.5.2.1/apache-kylin-1.5.2.1-bin.tar.gz 
-RUN tar -xf apache-kylin-1.5.2.1-bin.tar.gz
-RUN mv apache-kylin-1.5.2.1-bin /usr/local
-RUN cd /usr/local && ln -s ./apache-kylin-1.5.2.1-bin kylin
-ENV KYLIN_HOME /usr/local/kylin
+# Setting the PATH environment variable
+ENV PATH=$PATH:$JAVA_HOME/bin:$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$SPARK_HOME/bin:$HIVE_HOME/bin:$HBASE_HOME/bin:$KYLIN_HOME/bin
 
-# fixing the libhadoop.so like a boss
-RUN mkdir -p /usr/local/hadoop/lib/native/
-RUN curl -Ls http://dl.bintray.com/sequenceiq/sequenceiq-bin/hadoop-native-64-2.6.0.tar | tar -x -C /usr/local/hadoop/lib/native/
+COPY client-conf/core-site.xml $HADOOP_HOME/etc/hadoop/core-site.xml
+COPY client-conf/hdfs-site.xml $HADOOP_HOME/etc/hadoop/hdfs-site.xml
+COPY client-conf/mapred-site.xml $HADOOP_HOME/etc/hadoop/mapred-site.xml
+COPY client-conf/yarn-site.xml $HADOOP_HOME/etc/hadoop/yarn-site.xml
+COPY client-conf/hbase-site.xml $HBASE_HOME/conf/hbase-site.xml
+COPY client-conf/hdfs-site.xml $HBASE_HOME/conf/hdfs-site.xml
+COPY client-conf/hive-site.xml $HIVE_HOME/conf/hive-site.xml
+COPY client-conf/mapred-site.xml $HIVE_HOME/conf/mapred-site.xml
 
-ADD ssh_config /root/.ssh/config
-RUN chmod 600 /root/.ssh/config && chown root:root /root/.ssh/config
+# Cleanup
+RUN rm -rf /tmp/*
 
-ADD bootstrap.sh /etc/bootstrap.sh
-RUN chown root:root /etc/bootstrap.sh && chmod 700 /etc/bootstrap.sh
+WORKDIR /root
+EXPOSE 7070
 
-ENV BOOTSTRAP /etc/bootstrap.sh
+VOLUME /usr/local/kylin/logs
 
-# fix the 254 error code
-RUN sed  -i "/^[^#]*UsePAM/ s/.*/#&/"  /etc/ssh/sshd_config
-RUN echo "UsePAM no" >> /etc/ssh/sshd_config
-RUN echo "Port 2122" >> /etc/ssh/sshd_config
-
-CMD ["/etc/bootstrap.sh", "-d"]
-
-ENV JAVA_LIBRARY_PATH /usr/hdp/2.2.9.0-3393/hadoop/lib/native:/usr/local/hadoop/lib/native:$JAVA_LIBRARY_PATH
-
-# Kylin and Other ports
-EXPOSE 7070 7443 49707 2122
-
-ENV HADOOP_CONF_DIR /etc/hadoop/conf
-ENV HBASE_CONF_DIR /etc/hbase/conf
-ENV HIVE_CONF_DIR /etc/hive/conf
-
-# Add configuration files
-ADD conf/core-site.xml $HADOOP_CONF_DIR/core-site.xml
-ADD conf/hdfs-site.xml $HADOOP_CONF_DIR/hdfs-site.xml
-ADD conf/mapred-site.xml $HADOOP_CONF_DIR/mapred-site.xml
-ADD conf/yarn-site.xml $HADOOP_CONF_DIR/yarn-site.xml
-ADD conf/hbase-site.xml $HBASE_CONF_DIR/hbase-site.xml
-ADD conf/hdfs-site.xml $HBASE_CONF_DIR/hdfs-site.xml
-ADD conf/hive-site.xml $HIVE_CONF_DIR/hive-site.xml
-ADD conf/mapred-site.xml $HIVE_CONF_DIR/mapred-site.xml
-ADD conf/kylin.properties $KYLIN_HOME/conf/kylin.properties
+ENTRYPOINT ["sh", "-c", "/usr/local/kylin/bin/kylin.sh start; bash"]
