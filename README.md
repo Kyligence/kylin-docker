@@ -23,7 +23,7 @@ Before start, you need do some preparations:
 Below is a sample of building and running a docker image for Hortonworks HDP 2.2 cluster.
 
 1. Collect the client configuration files
-  Get the *-site.xml files from a working Hadoop client node, to a local folder say "~/hadoop-conf/";
+    Get the *-site.xml files from a working Hadoop client node, to a local folder say "~/hadoop-conf/";
 
 2. Prepare kylin.properties 
 
@@ -34,7 +34,7 @@ Below is a sample of building and running a docker image for Hortonworks HDP 2.2
   git clone https://github.com/Kyligence/kylin-docker  
   cd kylin-docker  
   git checkout kylin152-hdp22  
-  ```  
+  ```
 
 4. Copy the client configuration files to "kylin-docker/conf" folder, overwriting those template files;
   ```
@@ -79,4 +79,4 @@ You can check the log at /usr/local/kylin/bin/..//logs/kylin.log
 
 Thanks to SequenceIQ's [hadoop-docker](https://github.com/sequenceiq/hadoop-docker/) and other projects, which inspires us on developing this. 
 
-
+Lina
